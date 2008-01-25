@@ -8,3 +8,5 @@
  * max queue length per function
 
  * graceful shutdown (wait for all tasks to finish but deny any new job submissions)
+
+ * always read as much from the socket as possible
