@@ -1,0 +1,10 @@
+
+ * tests, tests, and more tests
+
+ * break up/clean up the code
+
+ * replace MemBlock
+
+ * max queue length per function
+
+ * graceful shutdown (wait for all tasks to finish but deny any new job submissions)

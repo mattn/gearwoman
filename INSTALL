@@ -1,0 +1,8 @@
+1. edit Makefile and uncomment the section you want
+2. `make`
+
+Options:
+
+ -p		port
+ -d		daemon
+ -l		log file path
