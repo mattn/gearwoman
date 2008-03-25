@@ -395,7 +395,10 @@ int msg_submit_job(Client *cli, unsigned char *arg, int argsize, gboolean backgr
             #if DEBUG
             g_debug("[%s] submit_job - merging %s:%s -> %s", cli->id, job->func, job->uniq, job->handle);
             #endif
-            g_ptr_array_add_uniq(job->listeners, cli);
+            if (!job->background) {
+                g_ptr_array_add_uniq(job->listeners, cli);
+                client_listen_to(cli, job);
+            }
             MemBlock *block = new_response(MSG_JOB_CREATED, strlen(job->handle), (unsigned char *)job->handle);
             client_send(cli, block);
             return 0;
