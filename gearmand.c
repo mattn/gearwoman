@@ -210,9 +210,9 @@ void fail_working_jobs(Client *cli)
     if (!cli->working)
         return;
 
-    int i;
-    for(i = 0; i < cli->working->len; i++) {
-        Job *job = g_ptr_array_index(cli->working, i);
+    // work_fail removes the job from cli->working
+    while(cli->working->len > 0) {
+        Job *job = g_ptr_array_index(cli->working, 0);
         work_fail(job);
     }
 }
