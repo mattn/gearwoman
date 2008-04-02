@@ -230,7 +230,9 @@ void wake_up_sleepers(const gchar *func)
 void work_fail(Job *job)
 {
     MemBlock *block = new_response(MSG_WORK_FAIL, strlen(job->handle), (unsigned char*)job->handle);
+    incRef(block); // Make sure the first listener doesn't decRef to 0 causing the block to be returned
     g_ptr_array_foreach(job->listeners, (GFunc)client_send, block);
+    decRef(block);
     remove_job(job);
 }
 
