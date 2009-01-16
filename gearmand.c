@@ -48,7 +48,7 @@ GHashTable *g_workers   = NULL; /* maps functions -> list of worker clients (GPt
 int g_foreground = 1;
 char *g_logfilename = "gearmand.log";
 char *g_bind = "0.0.0.0";
-int g_port = 7003;
+int g_port = 4730;
 char g_handle_base[MAX_HANDLE_LEN];
 
 void work_fail(Job *job);
