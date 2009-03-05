@@ -12,6 +12,10 @@ See LICENSE and COPYING for license details.
 #define MSG_NOSIGNAL 0
 #endif
 
+#if defined(_WIN32)
+#define MSG_NOSIGNAL 0
+#endif
+
 #ifndef max
 #define max(a,b) (a<b?a:b)
 #define min(a,b) (a<b?a:b)

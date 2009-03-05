@@ -13,6 +13,7 @@ See LICENSE and COPYING for license details.
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#ifndef _WIN32
 #include <netinet/in.h>
 #include <getopt.h>
 #include <arpa/inet.h>
@@ -21,6 +22,12 @@ See LICENSE and COPYING for license details.
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#else
+#include <getopt.h>
+#include <signal.h>
+#include <ws2tcpip.h>
+#define in_addr_t unsigned long
+#endif
 
 #include <event.h>
 #include <glib.h>
@@ -48,7 +55,8 @@ GHashTable *g_workers   = NULL; /* maps functions -> list of worker clients (GPt
 int g_foreground = 1;
 char *g_logfilename = "gearmand.log";
 char *g_bind = "0.0.0.0";
-int g_port = 4730;
+/* int g_port = 4730; */
+int g_port = 7003;
 char g_handle_base[MAX_HANDLE_LEN];
 
 void work_fail(Job *job);
@@ -72,7 +80,14 @@ int listen_on(in_addr_t addr, int port)
     int i = 1;
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&i, sizeof(i));
     // setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char *)&i, sizeof(i));
+#ifndef _WIN32
     fcntl(sock, F_SETFL, O_NONBLOCK);
+#else
+    {
+        unsigned long flags = 1;
+        ioctlsocket(sock, FIONBIO, &flags);
+    }
+#endif
 
     sin.sin_addr.s_addr = addr;
     sin.sin_port        = htons(port);
@@ -822,7 +837,14 @@ void listener_cb(int fd, short events, void *arg)
 
     int s = accept(fd, (struct sockaddr *)&sin, &addrlen);
     
+#ifndef _WIN32
     fcntl(s, F_SETFL, O_NONBLOCK);
+#else
+    {
+        unsigned long flags = 1;
+        ioctlsocket(s, FIONBIO, &flags);
+    }
+#endif
 
     Client *cli = client_new();
     cli->state = CLIENT_STATE_CONNECTED;
@@ -871,8 +893,12 @@ void logger(const gchar *domain, GLogLevelFlags level, const gchar *message, gpo
 {
     struct tm dt;
     time_t tme = time(NULL);
-    localtime_r(&tme, &dt);
     char str[64], *lvl = "OTHER";
+#ifndef _WIN32
+    localtime_r(&tme, &dt);
+#else
+    memcpy(&dt, localtime(&tme), sizeof(dt));
+#endif
 
     strftime(str, 64, "%F %T", &dt);
     switch(level) {
@@ -954,6 +980,7 @@ void signal_cb(int fd, short event, void *arg)
 
 void detach()
 {
+#ifndef _WIN32
     if (fork() != 0)
         exit(0);
 
@@ -977,6 +1004,10 @@ void detach()
     open("/dev/null", O_RDWR, 0);   /* 0 stdin */
     dup2(0, 1);  /* 1 stdout */
     dup2(0, 2);  /* 2 stderr */
+#else
+    perror("daemon mode is disabled on win32 ...");
+    exit(0);
+#endif
 }
 
 /****************************************************************************
@@ -985,6 +1016,11 @@ int main(int argc, char *argv[])
 {
     int nsockets = 0;
     struct event listeners[10];
+
+#ifdef _WIN32
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 0), &wsaData);
+#endif
 
     parseargs(argc, argv);
 
@@ -1009,8 +1045,11 @@ int main(int argc, char *argv[])
     event_init();
     //printf("%s %s\n", event_get_version(), event_get_method());
 
+#ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
+#endif
 
+#ifndef _WIN32
     struct event sig_int, sig_hup, sig_term;/*, sig_pipe;*/
     if (g_foreground) {
         event_set(&sig_int, SIGINT, EV_SIGNAL|EV_PERSIST, signal_cb, &sig_int);
@@ -1025,6 +1064,17 @@ int main(int argc, char *argv[])
     event_add(&sig_term, NULL);
     /*event_set(&sig_pipe, SIGPIPE, EV_SIGNAL|EV_PERSIST, signal_cb, &sig_pipe);
     event_add(&sig_pipe, NULL);*/
+#else
+    struct event sig_int, sig_term;/*, sig_pipe;*/
+    if (g_foreground) {
+        event_set(&sig_int, SIGINT, EV_SIGNAL|EV_PERSIST, signal_cb, &sig_int);
+        event_add(&sig_int, NULL);
+    } else {
+        signal(SIGINT, SIG_IGN);
+    }
+    event_set(&sig_term, SIGTERM, EV_SIGNAL|EV_PERSIST, signal_cb, &sig_term);
+    event_add(&sig_term, NULL);
+#endif
 
     int s = listen_on(inet_addr(g_bind), g_port);
     if (s == -1) {

@@ -9,7 +9,11 @@ See LICENSE and COPYING for license details.
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#ifndef _WIN32
 #include <sys/socket.h>
+#else
+#include <winsock2.h>
+#endif
 
 #include <assert.h>
 
