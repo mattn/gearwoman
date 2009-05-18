@@ -1,0 +1,35 @@
+DEBUG := YES
+
+CC = gcc
+LD = gcc -o
+AR = ar
+LDFLAGS = -LC:/GTK/lib -lgthread-2.0 -lglib-2.0 -lintl -levent -lws2_32
+CFLAGS = -Wall
+
+# # Debug
+# #LDFLAGS += -lefence
+# CPPFLAGS += -g `pkg-config --cflags gthread-2.0` -DDEBUG
+# OPTIMIZATIONS =
+
+# Production (NDEBUG = NO DEBUG / remove asserts)
+CPPFLAGS += -Wall -IC:/GTK/include/glib-2.0 -IC:/GTK/lib/glib-2.0/include -DNDEBUG
+OPTIMIZATIONS = -O2 -funroll-loops -finline-functions
+
+BIN =   gearmand.exe
+
+OBJ =   gearmand.o      \
+        client.o        \
+        job.o           \
+        util.o          \
+        memblock.o
+
+all: $(BIN)
+
+.c.o:
+	$(CC) $(CPPFLAGS) $(OPTIMIZATIONS) -c $<
+
+$(BIN): $(OBJ)
+	$(LD) $(BIN) $(OBJ) $(LDFLAGS) 
+
+clean : 
+	rm -f *.o $(BIN) core *.core
