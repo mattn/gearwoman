@@ -73,7 +73,7 @@ int parse_args(unsigned char **parsed, int count, unsigned char *arg, int argsiz
         if (i != count-1) {
             while (arg < end && *arg != 0) arg++;
             arg++; /* skip '0' */
-            if (arg >= end)
+            if (arg > end)
                 return -1;
         }
     }
