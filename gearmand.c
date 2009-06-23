@@ -49,7 +49,6 @@ GPtrArray  *g_clients   = NULL;
 GHashTable *g_jobqueue  = NULL; /* maps functions -> queue of jobs (GQueue) */
 GHashTable *g_jobs      = NULL; /* maps handle -> job */
 GHashTable *g_uniq_jobs = NULL; /* maps functions -> uniq -> job */
-GHashTable *g_sleepers  = NULL; /* maps functions -> arrays of sleeping workers (GPtrArray) */
 GHashTable *g_workers   = NULL; /* maps functions -> list of worker clients (GPtrArray) */
 
 int g_foreground = 1;
