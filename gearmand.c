@@ -578,7 +578,7 @@ int msg_work_complete(Client *cli, MemBlock *block)
     }
 
     #if DEBUG
-    g_debug("[%s] work_complete (%s) : %d bytes", cli->id, handle, block->nbytes - HEADER_SIZE - strlen(handle) - 1);
+    g_debug("[%s] work_complete (%s) : %ld bytes", cli->id, handle, block->nbytes - HEADER_SIZE - strlen(handle) - 1);
     #endif
     set_message_magic(block, MAGIC_RESPONSE);
     g_ptr_array_foreach(job->listeners, (GFunc)client_send, block);
