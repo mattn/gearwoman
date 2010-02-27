@@ -231,23 +231,26 @@ void fail_working_jobs(Client *cli)
     }
 }
 
-void _wake_up_client(Client *cli, gpointer user_data)
-{ client_wake_up(cli); }
+// void _wake_up_client(Client *cli, gpointer user_data)
+// { client_wake_up(cli); }
 
 void wake_up_sleepers(const gchar *func)
 {
     GPtrArray *workers = g_hash_table_lookup(g_workers, (gpointer)func);
     int i;
     Client *cli;
-    if (workers)
+    int start;
+    if (workers) {
+        start = rand() % workers->len;
         for(i = 0; i < workers->len; i++) {
-            cli = g_ptr_array_index(workers, i);
+            cli = g_ptr_array_index(workers, (start+i) % workers->len);
             if (cli->sleeping) {
                 client_wake_up(cli);
                 break;
             }
         }
         // g_ptr_array_foreach(workers, (GFunc)_wake_up_client, NULL);
+    }
 }
 
 void work_fail(Job *job)
